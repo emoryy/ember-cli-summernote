@@ -3,10 +3,14 @@
 
 var path = require('path');
 
+
 module.exports = {
 
   name: 'ember-cli-summernote',
 
+  // isDevelopingAddon: function() {
+  //   return true;
+  // },
 
   included: function(app) {
     this._super.included(app);
