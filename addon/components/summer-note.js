@@ -12,7 +12,8 @@ var SummerNoteComponent = Ember.Component.extend({
   disabled: false,
   dialogsInBody: false,
   disabledOptions: {},
-  lang: null,
+  lang: undefined,
+  fontNames: undefined,
 
   willDestroyElement: function() {
     this.$('#summernote').summernote('destroy');
@@ -20,13 +21,16 @@ var SummerNoteComponent = Ember.Component.extend({
   },
 
   didInsertElement: function() {
-    var _btnSize = this.get('btnSize');
-    var _height = this.get('height');
-    var _focus = this.get('focus');
-    var _airMode = this.get('airMode');
-    var _dialogsInBody = this.get('dialogsInBody');
-    var _toolbar = this.getToolbarOptions(this.get('disabledOptions'));
-    var _lang = this.get('lang');
+    var options = this.getProperties([
+      'height',
+      'focus',
+      'airMode',
+      'dialogsInBody',
+      'lang',
+      'fontNames'
+    ]);
+    options.toolbar = this.getToolbarOptions(this.get('disabledOptions'));
+
     // ensure summernote is loaded
     // summernote 0.6.0 is not working as of this code written.
     // 0.5.10 is working version.
@@ -34,13 +38,7 @@ var SummerNoteComponent = Ember.Component.extend({
     Ember.assert("summernote has to exist on Ember.$.fn.summernote", typeof Ember.$.fn.summernote === "function" );
     Ember.assert("tooltip has to exist on Ember.$.fn.tooltip", typeof Ember.$.fn.tooltip === "function" );
 
-    this.$('#summernote').summernote({
-      height: _height,
-      focus: _focus,
-      toolbar: _toolbar,
-      airMode: _airMode,
-      dialogsInBody: _dialogsInBody,
-      lang: _lang,
+    this.$('#summernote').summernote(options);
       // airPopover: [
       //   ['color', ['color']],
       //   ['font', ['bold', 'underline', 'clear']],
@@ -48,10 +46,9 @@ var SummerNoteComponent = Ember.Component.extend({
       //   ['table', ['table']],
       //   ['insert', ['link', 'picture']]
       // ]
-    });
 
     this.$().find('.note-editable').attr('contenteditable', !this.get('disabled'));
-    this.$('.btn').addClass(_btnSize);
+    this.$('.btn').addClass(this.get('btnSize'));
 
     var _content = this.get('content');
     this.$('#summernote').summernote('code', _content);
