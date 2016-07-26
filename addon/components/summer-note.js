@@ -1,8 +1,6 @@
 import Ember from "ember";
 
-
-
-var SummerNoteComponent = Ember.Component.extend({
+const SummerNoteComponent = Ember.Component.extend({
 
   classNames: ['wysiwyg-editor'],
   btnSize: 'btn-xs',
@@ -15,13 +13,12 @@ var SummerNoteComponent = Ember.Component.extend({
   lang: undefined,
   fontNames: undefined,
 
-  willDestroyElement: function() {
+  willDestroyElement() {
     this.$('#summernote').summernote('destroy');
-    console.log('summernote("destroy")');
   },
 
-  didInsertElement: function() {
-    var options = this.getProperties([
+  didInsertElement() {
+    const options = this.getProperties([
       'height',
       'focus',
       'airMode',
@@ -35,8 +32,8 @@ var SummerNoteComponent = Ember.Component.extend({
     // summernote 0.6.0 is not working as of this code written.
     // 0.5.10 is working version.
 
-    Ember.assert("summernote has to exist on Ember.$.fn.summernote", typeof Ember.$.fn.summernote === "function" );
-    Ember.assert("tooltip has to exist on Ember.$.fn.tooltip", typeof Ember.$.fn.tooltip === "function" );
+    Ember.assert("summernote has to exist on Ember.$.fn.summernote", typeof Ember.$.fn.summernote === "function");
+    Ember.assert("tooltip has to exist on Ember.$.fn.tooltip", typeof Ember.$.fn.tooltip === "function");
 
     this.$('#summernote').summernote(options);
       // airPopover: [
@@ -50,33 +47,33 @@ var SummerNoteComponent = Ember.Component.extend({
     this.$().find('.note-editable').attr('contenteditable', !this.get('disabled'));
     this.$('.btn').addClass(this.get('btnSize'));
 
-    var _content = this.get('content');
+    const _content = this.get('content');
     this.$('#summernote').summernote('code', _content);
   },
 
-  keyUp: function() {
+  keyUp() {
     this.doUpdate();
   },
 
-  click: function() {
+  click() {
     this.doUpdate();
   },
 
-  doUpdate: function() {
-    var content = this.$('#summernote').summernote('code');
+  doUpdate() {
+    const content = this.$('#summernote').summernote('code');
     this.set('content', content);
   },
 
-  setHeight: Ember.observer('height', function(/*sender, key, value, rev*/) {
-    this.$().find('.note-editable').css('height', this.get('height')); //use css height, as jQuery heigth/outerHeight does add the padding+margin
+  setHeight: Ember.observer('height', function observer(/* sender, key, value, rev */) {
+    this.$().find('.note-editable').css('height', this.get('height')); // use css height, as jQuery heigth/outerHeight does add the padding+margin
   }),
 
-  setContentEditable: Ember.observer('disabled', function(/*sender, key, value, rev*/) {
+  setContentEditable: Ember.observer('disabled', function observer(/* sender, key, value, rev */) {
     this.$().find('.note-editable').attr('contenteditable', !this.get('disabled'));
   }),
 
-  getToolbarOptions: function(disabledOptions) {
-    var availableOptions = {
+  getToolbarOptions(disabledOptions) {
+    const availableOptions = {
       style: {
         style: true
       },
@@ -123,25 +120,25 @@ var SummerNoteComponent = Ember.Component.extend({
         help: true
       }
     };
-    var _toolbar = [];
+    const _toolbar = [];
 
-    //disable Options
-    for (var key in availableOptions) {
-      var arr = [];
-      if(disabledOptions === undefined || disabledOptions === null ||disabledOptions[key] !== false) {
+    // disable Options
+    Object.keys(availableOptions).forEach(function eachFunc(key) {
+      const arr = [];
+      if (disabledOptions === undefined || disabledOptions === null || disabledOptions[key] !== false) {
         arr.push(key);
-        var arr2 = [];
-        for (var subKey in availableOptions[key]) {
-          if(disabledOptions === undefined || disabledOptions === null || disabledOptions[key] === undefined || disabledOptions[key] === null || disabledOptions[key][subKey] !== false) {
+        const arr2 = [];
+        Object.keys(availableOptions[key]).forEach(function innerEachFunc(subKey) {
+          if (disabledOptions === undefined || disabledOptions === null || disabledOptions[key] === undefined || disabledOptions[key] === null || disabledOptions[key][subKey] !== false) {
             arr2.push(subKey);
           }
-        }
+        });
         arr.push(arr2);
       }
-      if(arr.length > 0) {
+      if (arr.length > 0) {
         _toolbar.push(arr);
       }
-    }
+    });
 
     return _toolbar;
   }
