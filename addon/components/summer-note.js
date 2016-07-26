@@ -12,6 +12,7 @@ const SummerNoteComponent = Ember.Component.extend({
   disabledOptions: {},
   lang: undefined,
   fontNames: undefined,
+  callbacks: [],
 
   willDestroyElement() {
     this.$('#summernote').summernote('destroy');
@@ -24,7 +25,8 @@ const SummerNoteComponent = Ember.Component.extend({
       'airMode',
       'dialogsInBody',
       'lang',
-      'fontNames'
+      'fontNames',
+      'callbacks'
     ]);
     options.toolbar = this.getToolbarOptions(this.get('disabledOptions'));
 
