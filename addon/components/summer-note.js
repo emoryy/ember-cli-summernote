@@ -1,8 +1,20 @@
 import Ember from "ember";
 
+const readFileAsDataURL = function readFileAsDataURL(file) {
+  return new Ember.RSVP.Promise(function promise(resolve, reject) {
+    Ember.$.extend(new FileReader(), {
+      onload(e) {
+        const dataURL = e.target.result;
+        resolve(dataURL);
+      },
+      onerror() {
+        reject(this);
+      }
+    }).readAsDataURL(file);
+  });
+};
 
-
-var SummerNoteComponent = Ember.Component.extend({
+const SummerNoteComponent = Ember.Component.extend({
 
   classNames: ['wysiwyg-editor'],
   btnSize: 'btn-xs',
@@ -12,36 +24,45 @@ var SummerNoteComponent = Ember.Component.extend({
   disabled: false,
   dialogsInBody: false,
   disabledOptions: {},
-  callbacks:{},
-  willDestroyElement: function() {
-    this.$('#summernote').summernote('destroy');
-    console.log('summernote("destroy")');
+  lang: undefined,
+  fontNames: undefined,
+
+  placeholder: '',
+  callbacks: {
+    onChange: function(contents, $editable) {
+      const component = Ember.$(this).summernote.summerNoteComponentInstance;
+      if (component.get('content') !== contents) {
+        component.doUpdate();
+      }
+    }
   },
 
-  didInsertElement: function() {
-    var _btnSize = this.get('btnSize');
-    var _height = this.get('height');
-    var _focus = this.get('focus');
-    var _airMode = this.get('airMode');
-    var _dialogsInBody = this.get('dialogsInBody');
-    var _lang = this.get('lang'); // lang: 'ko-KR' // default: 'en-US'
-    var _toolbar = this.getToolbarOptions(this.get('disabledOptions'));
-	var _callbacks = this.get('callbacks');
+  willDestroyElement() {
+    this.$('#summernote').summernote('destroy');
+  },
+
+  didInsertElement() {
+    const options = this.getProperties([
+      'height',
+      'focus',
+      'airMode',
+      'dialogsInBody',
+      'lang',
+      'fontNames',
+      'placeholder',
+      'callbacks'
+    ]);
+    options.toolbar = this.getToolbarOptions(this.get('disabledOptions'));
+
     // ensure summernote is loaded
     // summernote 0.6.0 is not working as of this code written.
     // 0.5.10 is working version.
 
-    Ember.assert("summernote has to exist on Ember.$.fn.summernote", typeof Ember.$.fn.summernote === "function" );
-    Ember.assert("tooltip has to exist on Ember.$.fn.tooltip", typeof Ember.$.fn.tooltip === "function" );
+    Ember.assert("summernote has to exist on Ember.$.fn.summernote", typeof Ember.$.fn.summernote === "function");
+    Ember.assert("tooltip has to exist on Ember.$.fn.tooltip", typeof Ember.$.fn.tooltip === "function");
 
-    this.$('#summernote').summernote({
-      height: _height,
-      focus: _focus,
-      lang: _lang,
-      toolbar: _toolbar,
-      airMode: _airMode,
-      dialogsInBody: _dialogsInBody,
-	  callbacks: _callbacks
+    this.$('#summernote').summernote(options);
+    this.$('#summernote').summernote.summerNoteComponentInstance = this;
       // airPopover: [
       //   ['color', ['color']],
       //   ['font', ['bold', 'underline', 'clear']],
@@ -49,38 +70,64 @@ var SummerNoteComponent = Ember.Component.extend({
       //   ['table', ['table']],
       //   ['insert', ['link', 'picture']]
       // ]
-    });
 
     this.$().find('.note-editable').attr('contenteditable', !this.get('disabled'));
-    this.$('.btn').addClass(_btnSize);
+    this.$('.btn').addClass(this.get('btnSize'));
 
-    var _content = this.get('content');
+    const _content = this.get('content');
     this.$('#summernote').summernote('code', _content);
+
   },
 
-  keyUp: function() {
+  didRender() {
+    // move context popovers into the summernote editing area from the body,
+    // so that they don't appear outside the screen, when the bottom of the selected image or link
+    // is not visible (when the editing area is scrollable)
+    // apply negative margins calculated with the current position of the editing area on the screen,
+    // this way the absolute positioning logic will still work
+    const popOvers = Ember.$('.note-popover.popover.in.bottom');
+    const noteEditingArea = this.$('.note-editing-area')[0];
+    popOvers.appendTo(noteEditingArea);
+    const noteRect = noteEditingArea.getBoundingClientRect();
+    popOvers.css({
+      "margin-left": -noteRect.left + 'px',
+      "margin-top": (5 - noteRect.top) + 'px',
+    });
+  },
+
+  didReceiveAttrs() {
+    if (this.$('#summernote')) {
+      const summerNoteContent = this.$('#summernote').summernote('code');
+      const content = this.get('content');
+      if (summerNoteContent !== content) {
+        this.$('#summernote').summernote('code', content);
+      }
+    }
+  },
+
+  keyUp() {
     this.doUpdate();
   },
 
-  click: function() {
+  click() {
     this.doUpdate();
   },
 
-  doUpdate: function() {
-    var content = this.$('#summernote').summernote('code');
+  doUpdate() {
+    const content = this.$('#summernote').summernote('code');
     this.set('content', content);
   },
 
-  setHeight: Ember.observer('height', function(/*sender, key, value, rev*/) {
-    this.$().find('.note-editable').css('height', this.get('height')); //use css height, as jQuery heigth/outerHeight does add the padding+margin
+  setHeight: Ember.observer('height', function(/* sender, key, value, rev */) {
+    this.$().find('.note-editable').css('height', this.get('height')); // use css height, as jQuery heigth/outerHeight does add the padding+margin
   }),
 
-  setContentEditable: Ember.observer('disabled', function(/*sender, key, value, rev*/) {
+  setContentEditable: Ember.observer('disabled', function observer(/* sender, key, value, rev */) {
     this.$().find('.note-editable').attr('contenteditable', !this.get('disabled'));
   }),
 
-  getToolbarOptions: function(disabledOptions) {
-    var availableOptions = {
+  getToolbarOptions(disabledOptions) {
+    const availableOptions = {
       style: {
         style: true
       },
@@ -102,14 +149,6 @@ var SummerNoteComponent = Ember.Component.extend({
       color: {
         color: true
       },
-      para:  {
-        ul: true,
-        ol: true,
-        paragraph: true
-      },
-      height: {
-        height: true
-      },
       table: {
         table: true
       },
@@ -119,6 +158,14 @@ var SummerNoteComponent = Ember.Component.extend({
         video: true,
         hr: true
       },
+      para:  {
+        ul: true,
+        ol: true,
+        paragraph: true
+      },
+      height: {
+        height: true
+      },
       view: {
         fullscreen: true,
         codeview: true
@@ -127,25 +174,25 @@ var SummerNoteComponent = Ember.Component.extend({
         help: true
       }
     };
-    var _toolbar = [];
+    const _toolbar = [];
 
-    //disable Options
-    for (var key in availableOptions) {
-      var arr = [];
-      if(disabledOptions === undefined || disabledOptions === null ||disabledOptions[key] !== false) {
+    // disable Options
+    Object.keys(availableOptions).forEach(function eachFunc(key) {
+      const arr = [];
+      if (disabledOptions === undefined || disabledOptions === null || disabledOptions[key] !== false) {
         arr.push(key);
-        var arr2 = [];
-        for (var subKey in availableOptions[key]) {
-          if(disabledOptions === undefined || disabledOptions === null || disabledOptions[key] === undefined || disabledOptions[key] === null || disabledOptions[key][subKey] !== false) {
+        const arr2 = [];
+        Object.keys(availableOptions[key]).forEach(function innerEachFunc(subKey) {
+          if (disabledOptions === undefined || disabledOptions === null || disabledOptions[key] === undefined || disabledOptions[key] === null || disabledOptions[key][subKey] !== false) {
             arr2.push(subKey);
           }
-        }
+        });
         arr.push(arr2);
       }
-      if(arr.length > 0) {
+      if (arr.length > 0) {
         _toolbar.push(arr);
       }
-    }
+    });
 
     return _toolbar;
   }
