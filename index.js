@@ -7,10 +7,6 @@ module.exports = {
 
   name: 'ember-cli-summernote',
 
-  init: function() {
-
-  },
-
   contentFor: function(type, config) {
     // Const
     let summernoteConfig = config['ember-cli-summernote'] || {};
