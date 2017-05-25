@@ -7,24 +7,28 @@ module.exports = {
 
   name: 'ember-cli-summernote',
 
-  contentFor: function(type, config) {
-    // Const
-    let summernoteConfig = config['ember-cli-summernote'] || {};
-
-    let summernotePath = 'bower_components/summernote/dist/';
-    let summernoteLangFile = `lang/summernote-${summernoteConfig.lang}.js`;
-    let summernoteLangFilePath = `${summernotePath}${summernoteLangFile}`;
-    console.log(`summernoteLangFilePath:${summernoteLangFilePath}`);
-
+  options: {
+    nodeAssets: {
+      'summernote': {
+        vendor: {
+          srcDir: 'dist',
+          include: ['summernote.css', 'summernote.min.js']
+        },
+        public: {
+          srcDir: 'dist/font',
+          include: ['summernote.eot', 'summernote.ttf', 'summernote.woff'],
+          destDir: 'assets/font'
+        }
+      }
+    }
   },
 
   included: function(app) {
     this._super.included(app);
 
-    var summernotePath   = path.join(app.bowerDirectory,'/summernote/dist/');
-    var bootstrapPath   = path.join(app.bowerDirectory,'/bootstrap/dist/');
-    var fontawesomePath   = path.join(app.bowerDirectory,'/font-awesome/');
-    var options         = app.options['ember-cli-summernote'] || {};
+    var bootstrapPath    = path.join(app.bowerDirectory,'/bootstrap/dist/');
+    var fontawesomePath  = path.join(app.bowerDirectory,'/font-awesome/');
+    var options          = app.options['ember-cli-summernote'] || {};
 
 
     // Import Bootstrap
@@ -48,12 +52,10 @@ module.exports = {
     }
 
     // Include Summernote.
-    app.import(path.join(summernotePath, 'summernote.css'));
-    app.import(path.join(summernotePath, 'summernote.min.js'));
-    app.import(path.join(summernotePath, 'font/summernote.eot'), { destDir: 'assets/font' });
-    app.import(path.join(summernotePath, 'font/summernote.ttf'), { destDir: 'assets/font' });
-    app.import(path.join(summernotePath, 'font/summernote.woff'), { destDir: 'assets/font' });
 
-  }
+    app.import('vendor/summernote/summernote.css');
+    app.import('vendor/summernote/summernote.min.js');
+
+  },
 
 };
