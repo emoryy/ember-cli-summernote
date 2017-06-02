@@ -5,14 +5,12 @@
   "keywords": [
     "ember-addon"
   ],
-
-
   "license": "MIT",
   "author": "Guysung Kim",
-   "directories": {
-       "doc": "doc",
-       "test": "tests"
-   },
+  "directories": {
+    "doc": "doc",
+    "test": "tests"
+  },
   "repository": "https://github.com/vsymguysung/ember-cli-summernote",
   "scripts": {
     "build": "ember build",
@@ -42,6 +40,7 @@
     "ember-load-initializers": "^1.0.0",
     "ember-resolver": "^4.0.0",
     "ember-source": "~2.13.0",
+    "bootstrap": "3.3.7",
     "loader.js": "^4.2.3"
   },
   "engines": {
